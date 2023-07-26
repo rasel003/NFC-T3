@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">EChem COVID19 Sensor</string>
+    <string name="app_name">C19 T3</string>
+    <string name="app_top_title">EChem COVID19 Sensor</string>
     <string name="explanation">Demo</string>
 </resources>
