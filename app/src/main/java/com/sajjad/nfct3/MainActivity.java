@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
                 new NdefReaderTask().execute(tag);
 
             } else {
-                Log.d(TAG, "Wrong mime type: " + type);
+                Toast.makeText(this, "Wrong mime type: " + type, Toast.LENGTH_SHORT).show();
             }
         } else if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)) {
 
