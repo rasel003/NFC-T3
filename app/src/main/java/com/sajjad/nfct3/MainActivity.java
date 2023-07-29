@@ -10,6 +10,7 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.nfc.tech.NfcA;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,7 +24,6 @@ import java.util.Arrays;
  * Activity for reading data from an NDEF Tag.
  *
  * @author Ralf Wondratschek
- *
  */
 public class MainActivity extends Activity {
 
@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
             String type = intent.getType();
             if (MIME_TEXT_PLAIN.equals(type)) {
                 Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-                new NdefReaderTask().execute(tag);
+                new NdefReaderTask2().execute(tag);
 
             } else {
                 Toast.makeText(this, "Wrong mime type: " + type, Toast.LENGTH_SHORT).show();
@@ -113,18 +113,18 @@ public class MainActivity extends Activity {
 
             for (String tech : techList) {
                 if (searchedTech.equals(tech)) {
-                    new NdefReaderTask().execute(tag);
+                    new NdefReaderTask2().execute(tag);
                     break;
                 }
             }
         }
     }
+
     /**
-    * Background task for reading the data. Do not block the UI thread while reading.
-*
-        * @author Ralf Wondratschek
-*
-        */
+     * Background task for reading the data. Do not block the UI thread while reading.
+     *
+     * @author Ralf Wondratschek
+     */
     private class NdefReaderTask extends AsyncTask<Tag, Void, String> {
         @Override
         protected String doInBackground(Tag... params) {
@@ -180,9 +180,45 @@ public class MainActivity extends Activity {
         }
     }
 
+    private class NdefReaderTask2 extends AsyncTask<Tag, Void, byte[]> {
+        @Override
+        protected byte[] doInBackground(Tag... params) {
+            Tag tag = params[0];
+
+            NfcA nfcA = NfcA.get(tag);
+            if (nfcA != null) {
+                try {
+                    nfcA.connect();
+                    return nfcA.transceive(new byte[]{
+                            (byte) 0x3A,  // WRITE
+                            (byte) 0xF0,  // page = 3
+                            (byte) 0xFF // capability container (mapping version 1.0, 48 bytes for data available, read/write allowed)
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "doInBackground: " + e.getMessage(), e);
+                } finally {
+                    try {
+                        nfcA.close();
+                    } catch (Exception e) {
+                        Log.e(TAG, "doInBackground: " + e.getMessage(), e);
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(byte[] result) {
+            if (result != null) {
+                String str = new String(result);
+                mTextView.setText(mTextView.getText() + "\n" + str);
+            }
+        }
+    }
+
     /**
      * @param activity The corresponding {@link Activity} requesting the foreground dispatch.
-     * @param adapter The {@link NfcAdapter} used for the foreground dispatch.
+     * @param adapter  The {@link NfcAdapter} used for the foreground dispatch.
      */
     public static void setupForegroundDispatch(final Activity activity, NfcAdapter adapter) {
         final Intent intent = new Intent(activity.getApplicationContext(), activity.getClass());
@@ -208,7 +244,7 @@ public class MainActivity extends Activity {
 
     /**
      * @param activity The corresponding {@link } requesting to stop the foreground dispatch.
-     * @param adapter The {@link NfcAdapter} used for the foreground dispatch.
+     * @param adapter  The {@link NfcAdapter} used for the foreground dispatch.
      */
     public static void stopForegroundDispatch(final Activity activity, NfcAdapter adapter) {
         adapter.disableForegroundDispatch(activity);
