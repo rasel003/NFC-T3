@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
             String type = intent.getType();
             if (MIME_TEXT_PLAIN.equals(type)) {
                 Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-                new NdefReaderTask2().execute(tag);
+                processTagInfo(tag);
 
             } else {
                 Toast.makeText(this, "Wrong mime type: " + type, Toast.LENGTH_SHORT).show();
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
 
             for (String tech : techList) {
                 if (searchedTech.equals(tech)) {
-                    new NdefReaderTask2().execute(tag);
+                   processTagInfo(tag);
                     break;
                 }
             }
@@ -180,41 +180,47 @@ public class MainActivity extends Activity {
         }
     }
 
-    private class NdefReaderTask2 extends AsyncTask<Tag, Void, byte[]> {
-        @Override
-        protected byte[] doInBackground(Tag... params) {
-            Tag tag = params[0];
+    private void processTagInfo(Tag tag){
+        NfcA nfcA = NfcA.get(tag);
+        if (nfcA != null) {
+            try {
+                nfcA.connect();
+                Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+                byte[] data = nfcA.transceive(new byte[]{
+                        (byte) 0x3A,  // WRITE
+                        (byte) 0xF0,  // page = 3
+                        (byte) 0xFF // capability container (mapping version 1.0, 48 bytes for data available, read/write allowed)
+                });
 
-            NfcA nfcA = NfcA.get(tag);
-            if (nfcA != null) {
+                Toast.makeText(this, "Received byte data"+ new String(data), Toast.LENGTH_SHORT).show();
+                mTextView.setText(mTextView.getText() + "\n" + getHex(data));
+            } catch (Exception e) {
+                Toast.makeText(this, "Exception : "+e.getMessage(), Toast.LENGTH_SHORT).show();
+            } finally {
                 try {
-                    nfcA.connect();
-                    return nfcA.transceive(new byte[]{
-                            (byte) 0x3A,  // WRITE
-                            (byte) 0xF0,  // page = 3
-                            (byte) 0xFF // capability container (mapping version 1.0, 48 bytes for data available, read/write allowed)
-                    });
+                    nfcA.close();
                 } catch (Exception e) {
                     Log.e(TAG, "doInBackground: " + e.getMessage(), e);
-                } finally {
-                    try {
-                        nfcA.close();
-                    } catch (Exception e) {
-                        Log.e(TAG, "doInBackground: " + e.getMessage(), e);
-                    }
                 }
             }
-            return null;
-        }
+        }else Toast.makeText(this, "nfca is null", Toast.LENGTH_SHORT).show();
+    }
 
-        @Override
-        protected void onPostExecute(byte[] result) {
-            if (result != null) {
-                String str = new String(result);
-                mTextView.setText(mTextView.getText() + "\n" + str);
+    private String getHex(byte[] bytes) {
+        Log.v("tag", "Getting hex");
+        StringBuilder sb = new StringBuilder();
+        for (int i = bytes.length - 1; i >= 0; --i) {
+            int b = bytes[i] & 0xff;
+            if (b < 0x10)
+                sb.append('0');
+            sb.append(Integer.toHexString(b));
+            if (i > 0) {
+                sb.append(" ");
             }
         }
+        return sb.toString();
     }
+
 
     /**
      * @param activity The corresponding {@link Activity} requesting the foreground dispatch.

@@ -1,3 +1,10 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import com.android.build.gradle.api.ApplicationVariant
+import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -33,8 +40,37 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-}
 
+    applicationVariants.all(ApplicationVariantAction())
+}
+class ApplicationVariantAction : Action<ApplicationVariant> {
+    override fun execute(variant: ApplicationVariant) {
+        val fileName = createFileName(variant)
+        variant.outputs.all(VariantOutputAction(fileName))
+    }
+
+    private fun createFileName(variant: ApplicationVariant): String {
+        return "C19 T3" +
+                "_${variant.name}" +
+//                "_verCode${Android.versionCode}" +
+                "_${getDateTimeFormat()}.apk"
+    }
+
+    private fun getDateTimeFormat(): String {
+        val simpleDateFormat = SimpleDateFormat("dd-MMM-yy-hh-mm-a", Locale.US)
+        return simpleDateFormat.format(Date())
+    }
+
+    class VariantOutputAction(
+        private val fileName: String
+    ) : Action<BaseVariantOutput> {
+        override fun execute(output: BaseVariantOutput) {
+            if (output is BaseVariantOutputImpl) {
+                output.outputFileName = fileName
+            }
+        }
+    }
+}
 dependencies {
 
     implementation("androidx.core:core-ktx:1.9.0")
