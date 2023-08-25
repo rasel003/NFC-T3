@@ -9,6 +9,7 @@ import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
+import android.nfc.tech.NfcA
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
@@ -84,7 +85,7 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
             scope.launch(block = {
                 binder.viewModel?.observeTag()?.collectLatest(action = { tag ->
                     Log.d(TAG, "observeTag $tag")
-                    binder.textViewExplanation.text = tag
+                    binder.tvTagInfo.text = tag
                 })
             })
         }
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
     override fun onTagDiscovered(tag : Tag?) {
         binder.viewModel?.readTag(tag)
         NdefReaderTask().execute(tag)
+        tag?.let { processTagInfo(it) }
     }
 
     private fun handleIntent(intent: Intent) {
@@ -215,17 +217,17 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
         }
     }
 
-    /*private fun processTagInfo(tag: Tag) {
+    private fun processTagInfo(tag: Tag) {
         val nfcA = NfcA.get(tag)
         if (nfcA != null) {
             try {
                 nfcA.connect()
                 Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show()
                 val data = nfcA.transceive(byteArrayOf(0x3A.toByte(), 0xF0.toByte(), 0xFF.toByte()))
-                Toast.makeText(this, "Received byte data" + kotlin.String(data), Toast.LENGTH_SHORT)
+                Toast.makeText(this, "Received byte data" + String(data), Toast.LENGTH_SHORT)
                     .show()
-                mTextView.text = """
-                    ${mTextView!!.text}
+                binder.tvConcentrationValue.text = """
+                    ${binder.tvConcentrationValue!!.text}
                     ${getHex(data)}
                     """.trimIndent()
             } catch (e: Exception) {
@@ -238,7 +240,7 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
                 }
             }
         } else Toast.makeText(this, "nfca is null", Toast.LENGTH_SHORT).show()
-    }*/
+    }
 
     private fun getHex(bytes: ByteArray): String {
         Log.v("tag", "Getting hex")
