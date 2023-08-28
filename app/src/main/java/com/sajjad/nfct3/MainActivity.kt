@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
             val tag = params[0]
             val ndef = Ndef.get(tag)
                 ?: // NDEF is not supported by this Tag.
-                return null
+                return "NDEF is not supported by this Tag"
             val ndefMessage = ndef.cachedNdefMessage
             val records = ndefMessage.records
             for (ndefRecord in records) {
