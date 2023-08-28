@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(), CompoundButton.OnCheckedChangeListener
     override fun onTagDiscovered(tag : Tag?) {
         binder.viewModel?.readTag(tag)
         NdefReaderTask().execute(tag)
-        tag?.let { processTagInfo(it) }
+       // tag?.let { processTagInfo(it) }
     }
 
     private fun handleIntent(intent: Intent) {
