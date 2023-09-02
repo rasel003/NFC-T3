@@ -9,4 +9,5 @@ public class Common {
         return new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
 
     }
+    public static String result = "view_data";
 }
