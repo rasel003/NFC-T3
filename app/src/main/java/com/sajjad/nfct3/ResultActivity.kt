@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.sajjad.nfct3.databinding.ActivityBinder
 import com.sajjad.nfct3.preference.AppPrefsManager
 import kotlin.math.abs
@@ -36,8 +37,36 @@ class ResultActivity : AppCompatActivity() {
         binder.btnBuffer.setOnClickListener { getDataFromNFCTag(DataType.Buffer) }
         binder.btnAnalyte.setOnClickListener { getDataFromNFCTag(DataType.Analyte) }
 
-        intent.getStringExtra("data")?.let {
-            Toast.makeText(this, "Ndef : $it", Toast.LENGTH_SHORT).show()
+        intent.getStringExtra("data")?.let { value ->
+            Toast.makeText(this, "Ndef : $value", Toast.LENGTH_SHORT).show()
+
+            val singleItems = arrayOf("Buffer", "Analyte")
+            var checkedItem = 1
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Select value type : ")
+                .setNeutralButton("Cancel") { dialog, which ->
+                    // Respond to neutral button press
+                    dialog.dismiss()
+                }
+                .setPositiveButton("Ok") { dialog, which ->
+                    // Respond to positive button press
+                    if (checkedItem == 1) {
+                        binder.tvBufferValue.text = value
+                        prefsManager.bufferData = value
+                    } else {
+                        binder.tvAnalyteValue.text = value
+                        prefsManager.analyteData = value
+                    }
+                    calculateResult()
+                    dialog.dismiss()
+                }
+                // Single-choice items (initialized with checked item)
+                .setSingleChoiceItems(singleItems, checkedItem) { dialog, which ->
+                    // Respond to item chosen
+                    checkedItem = which
+                }
+                .show()
         }
 
     }
