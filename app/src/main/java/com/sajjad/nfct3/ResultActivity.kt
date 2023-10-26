@@ -41,7 +41,7 @@ class ResultActivity : AppCompatActivity() {
             Toast.makeText(this, "Ndef : $value", Toast.LENGTH_SHORT).show()
 
             val singleItems = arrayOf("Buffer", "Analyte")
-            var checkedItem = 1
+            var checkedItem = 0
 
             MaterialAlertDialogBuilder(this)
                 .setTitle("Select value type : ")
@@ -51,7 +51,7 @@ class ResultActivity : AppCompatActivity() {
                 }
                 .setPositiveButton("Ok") { dialog, which ->
                     // Respond to positive button press
-                    if (checkedItem == 1) {
+                    if (checkedItem == 0) {
                         binder.tvBufferValue.text = value
                         prefsManager.bufferData = value
                     } else {
@@ -78,7 +78,7 @@ class ResultActivity : AppCompatActivity() {
         if (bufferValue != null && analyteValue != null) {
             val result = abs(bufferValue - analyteValue)
             binder.tvMessage.visibility = View.VISIBLE
-            if (result > 5) {
+            if (result > 20) {
                 binder.tvMessage.text = "Result : Positive"
             } else {
                 binder.tvMessage.text = "Result : Negative"
