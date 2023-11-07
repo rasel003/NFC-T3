@@ -48,13 +48,15 @@ class ResultActivity : AppCompatActivity() {
         val analyteValue = binder.tvAnalyteValue.text.toString().toFloatOrNull()
 
         if (bufferValue != null && analyteValue != null) {
-            val result = abs(bufferValue - analyteValue)
+            val result = bufferValue - analyteValue
             binder.tvMessage.visibility = View.VISIBLE
-            if (result > 5) {
+
+            if (result < 0) {
+                binder.tvMessage.text = "Result : Negative"
+            } else if (result > 20) {
                 binder.tvMessage.text = "Result : Positive"
             } else {
                 binder.tvMessage.text = "Result : Negative"
-
             }
         } else {
             binder.tvMessage.visibility = View.GONE
